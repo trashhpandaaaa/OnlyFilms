@@ -1,0 +1,35 @@
+/* OnlyFilms JavaFX Stylesheet (partial port of original CSS) */
+
+.navbar {
+    -fx-background-color: #14181c;
+    -fx-padding: 10px 20px;
+    -fx-spacing: 20px;
+    -fx-alignment: center-left;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 8, 0, 0, 2);
+}
+.logo {
+    -fx-font-size: 1.6em;
+    -fx-font-weight: bold;
+    -fx-text-fill: #00c030;
+    -fx-padding: 0 16px 0 0;
+}
+.button {
+    -fx-background-radius: 4px;
+    -fx-font-size: 1em;
+    -fx-padding: 6px 16px;
+    -fx-background-color: #242c34;
+    -fx-text-fill: #fff;
+    -fx-border-color: #303840;
+    -fx-border-radius: 4px;
+    -fx-cursor: hand;
+}
+.button:hover {
+    -fx-background-color: #384250;
+}
+.text-field {
+    -fx-background-color: #242c34;
+    -fx-text-fill: #fff;
+    -fx-border-color: #303840;
+    -fx-border-radius: 4px;
+    -fx-padding: 6px 12px;
+}

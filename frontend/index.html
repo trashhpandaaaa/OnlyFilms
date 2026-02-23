@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OnlyFilms — Discover, Review, Share</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- ========== NAVBAR ========== -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo" onclick="navigateTo('home')">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
+                </svg>
+                <span class="logo-text">Only<span class="logo-accent">Films</span></span>
+            </a>
+
+            <div class="nav-links" id="navLinks">
+                <a href="#" class="nav-link active" data-section="home" onclick="navigateTo('home')">Home</a>
+                <a href="#" class="nav-link" data-section="movies" onclick="navigateTo('movies')">Films</a>
+                <a href="#" class="nav-link" data-section="genres" onclick="navigateTo('genres')">Genres</a>
+            </div>
+
+            <div class="nav-search">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <input type="text" id="globalSearch" placeholder="Search films..." autocomplete="off">
+            </div>
+
+            <div class="nav-actions">
+                <div class="nav-auth" id="navAuth">
+                    <button class="btn btn-ghost" onclick="showModal('login')">Sign In</button>
+                    <button class="btn btn-primary" onclick="showModal('register')">Join Free</button>
+                </div>
+                <div class="nav-user hidden" id="navUser">
+                    <button class="btn btn-ghost btn-profile" onclick="navigateTo('profile')">
+                        <div class="nav-avatar" id="navAvatar">U</div>
+                        <span id="userGreeting">Profile</span>
+                    </button>
+                    <button class="btn btn-ghost btn-icon-only" onclick="logout()" title="Sign Out">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Slide Menu -->
+    <div class="mobile-menu hidden" id="mobileMenu">
+        <a href="#" onclick="navigateTo('home'); toggleMobileMenu()">Home</a>
+        <a href="#" onclick="navigateTo('movies'); toggleMobileMenu()">Films</a>
+        <a href="#" onclick="navigateTo('genres'); toggleMobileMenu()">Genres</a>
+        <hr>
+        <div id="mobileAuthArea">
+            <button class="btn btn-primary btn-full" onclick="showModal('login'); toggleMobileMenu()">Sign In</button>
+        </div>
+    </div>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="main-content" id="mainContent">
+
+        <!-- HOME -->
+        <section id="homeSection" class="page-section">
+            <div class="hero">
+                <div class="hero-bg"></div>
+                <div class="hero-content">
+                    <h1 class="hero-title">
+                        <span class="hero-line">Track films you've watched.</span>
+                        <span class="hero-line">Save those you want to see.</span>
+                        <span class="hero-line accent">Tell your friends what's good.</span>
+                    </h1>
+                    <p class="hero-subtitle">The social network for film lovers. Join thousands of cinephiles discovering and sharing their passion for cinema.</p>
+                    <div class="hero-cta">
+                        <button class="btn btn-primary btn-large btn-glow" onclick="showModal('register')">
+                            Get Started — It's Free
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </button>
+                        <button class="btn btn-glass btn-large" onclick="navigateTo('movies')">Browse Films</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="home-rows">
+                <div class="content-row reveal">
+                    <div class="row-header">
+                        <h2 class="row-title">Popular Films</h2>
+                        <a href="#" class="row-link" onclick="navigateTo('movies')">View All →</a>
+                    </div>
+                    <div class="movies-grid compact" id="topMoviesGrid"></div>
+                </div>
+                <div class="content-row reveal">
+                    <div class="row-header">
+                        <h2 class="row-title">Now Playing</h2>
+                        <a href="#" class="row-link" onclick="showCategory('now-playing')">View All →</a>
+                    </div>
+                    <div class="movies-grid compact" id="nowPlayingGrid"></div>
+                </div>
+                <div class="content-row reveal">
+                    <div class="row-header">
+                        <h2 class="row-title">Coming Soon</h2>
+                        <a href="#" class="row-link" onclick="showCategory('upcoming')">View All →</a>
+                    </div>
+                    <div class="movies-grid compact" id="upcomingGrid"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BROWSE FILMS -->
+        <section id="moviesSection" class="page-section hidden">
+            <div class="section-container">
+                <div class="page-title-bar">
+                    <h1 class="page-title" id="moviesTitle">Browse Films</h1>
+                </div>
+                <div class="filters-bar">
+                    <div class="filter-search">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                        <input type="text" id="searchInput" placeholder="Search by title...">
+                    </div>
+                    <div class="filter-controls">
+                        <select id="sortSelect" onchange="applyFilters()">
+                            <option value="popularity.desc">Most Popular</option>
+                            <option value="vote_average.desc">Highest Rated</option>
+                            <option value="primary_release_date.desc">Newest First</option>
+                            <option value="primary_release_date.asc">Oldest First</option>
+                            <option value="revenue.desc">Highest Grossing</option>
+                        </select>
+                        <select id="yearSelect" onchange="applyFilters()">
+                            <option value="">All Years</option>
+                        </select>
+                        <select id="ratingSelect" onchange="applyFilters()">
+                            <option value="">Any Rating</option>
+                            <option value="4">4+ Stars</option>
+                            <option value="3.5">3.5+ Stars</option>
+                            <option value="3">3+ Stars</option>
+                            <option value="2">2+ Stars</option>
+                        </select>
+                        <button class="btn btn-ghost btn-sm" onclick="resetFilters()">Reset</button>
+                    </div>
+                </div>
+                <div class="movies-grid" id="moviesGrid"></div>
+                <div class="load-more" id="loadMoreContainer">
+                    <button class="btn btn-outline btn-large" id="loadMoreBtn" onclick="loadMoreMovies()">Load More Films</button>
+                    <div class="spinner hidden" id="loadMoreSpinner"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- GENRES -->
+        <section id="genresSection" class="page-section hidden">
+            <div class="section-container">
+                <div class="page-title-bar">
+                    <h1 class="page-title">Genres</h1>
+                    <p class="page-subtitle">Explore films by genre</p>
+                </div>
+                <div class="genres-grid" id="genresGrid"></div>
+            </div>
+        </section>
+
+        <!-- MOVIE DETAIL -->
+        <section id="movieDetailSection" class="page-section hidden">
+            <div id="movieDetail"><div class="loading-state">Loading film...</div></div>
+        </section>
+
+        <!-- PERSON DETAIL -->
+        <section id="personSection" class="page-section hidden">
+            <div class="section-container" id="personDetail"><div class="loading-state">Loading...</div></div>
+        </section>
+
+        <!-- PROFILE -->
+        <section id="profileSection" class="page-section hidden">
+            <div class="section-container" id="profileContainer"><div class="loading-state">Loading profile...</div></div>
+        </section>
+    </main>
+
+    <!-- ========== MODALS ========== -->
+    <!-- Login -->
+    <div class="modal-overlay hidden" id="loginModal">
+        <div class="modal-backdrop" onclick="closeModal('login')"></div>
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeModal('login')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+            <div class="modal-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg></div>
+            <h2>Welcome back</h2>
+            <p class="modal-sub">Sign in to your account</p>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group"><label>Username</label><input type="text" id="loginUsername" placeholder="Enter your username" required></div>
+                <div class="form-group"><label>Password</label><input type="password" id="loginPassword" placeholder="Enter your password" required></div>
+                <div class="form-error hidden" id="loginError"></div>
+                <button type="submit" class="btn btn-primary btn-full btn-large">Sign In</button>
+            </form>
+            <div class="modal-divider"><span>New here?</span></div>
+            <button class="btn btn-outline btn-full" onclick="switchModal('login','register')">Create an account</button>
+        </div>
+    </div>
+    <!-- Register -->
+    <div class="modal-overlay hidden" id="registerModal">
+        <div class="modal-backdrop" onclick="closeModal('register')"></div>
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeModal('register')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+            <div class="modal-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg></div>
+            <h2>Join OnlyFilms</h2>
+            <p class="modal-sub">Create your free account</p>
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group"><label>Username</label><input type="text" id="registerUsername" placeholder="Choose a username" required minlength="3"></div>
+                <div class="form-group"><label>Email</label><input type="email" id="registerEmail" placeholder="you@example.com" required></div>
+                <div class="form-group"><label>Password</label><input type="password" id="registerPassword" placeholder="At least 6 characters" required minlength="6"></div>
+                <div class="form-error hidden" id="registerError"></div>
+                <button type="submit" class="btn btn-primary btn-full btn-large">Create Account</button>
+            </form>
+            <div class="modal-divider"><span>Already a member?</span></div>
+            <button class="btn btn-outline btn-full" onclick="switchModal('register','login')">Sign in</button>
+        </div>
+    </div>
+    <!-- Review -->
+    <div class="modal-overlay hidden" id="reviewModal">
+        <div class="modal-backdrop" onclick="closeModal('review')"></div>
+        <div class="modal-card modal-wide">
+            <button class="modal-close" onclick="closeModal('review')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+            <h2>Write a Review</h2>
+            <p class="modal-sub" id="reviewMovieTitle">Share your thoughts</p>
+            <form id="reviewForm" onsubmit="handleReview(event)">
+                <input type="hidden" id="reviewMovieId">
+                <div class="form-group">
+                    <label>Your Rating</label>
+                    <div class="rating-input">
+                        <div class="star-rating" id="starRating">
+                            <span class="star" data-rating="1"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></span>
+                            <span class="star" data-rating="2"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></span>
+                            <span class="star" data-rating="3"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></span>
+                            <span class="star" data-rating="4"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></span>
+                            <span class="star" data-rating="5"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></span>
+                        </div>
+                        <span class="rating-label" id="ratingText">Select a rating</span>
+                    </div>
+                    <input type="hidden" id="reviewRating" value="0">
+                </div>
+                <div class="form-group">
+                    <label>Your Review <span class="optional">(optional)</span></label>
+                    <textarea id="reviewContent" rows="5" placeholder="What did you think of this film?"></textarea>
+                </div>
+                <div class="form-error hidden" id="reviewError"></div>
+                <button type="submit" class="btn btn-primary btn-full btn-large">Submit Review</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== TOAST ========== -->
+    <div class="toast hidden" id="toast">
+        <div class="toast-body">
+            <svg class="toast-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span id="toastMessage"></span>
+        </div>
+    </div>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <svg class="footer-logo" viewBox="0 0 24 24" fill="currentColor"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
+                    <span>OnlyFilms</span>
+                </div>
+                <div class="footer-links">
+                    <a href="#">About</a><a href="#">Contact</a><a href="#">Privacy</a><a href="#">Terms</a>
+                </div>
+            </div>
+            <p class="footer-copy">&copy; 2026 OnlyFilms. Film data provided by TMDB.</p>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
