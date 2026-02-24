@@ -2,244 +2,118 @@ package com.onlyfilms.dao;
 
 import com.onlyfilms.config.DatabaseConfig;
 import com.onlyfilms.model.Follow;
-import com.onlyfilms.model.User;
+import com.onlyfilms.model.Profile;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Data Access Object for Follow operations
- */
 public class FollowDAO {
 
-    /**
-     * Follow a user
-     */
-    public boolean follow(int followerId, int followingId) {
-        // Can't follow yourself
-        if (followerId == followingId) {
-            return false;
-        }
-
-        String sql = "INSERT IGNORE INTO follows (follower_id, following_id) VALUES (?, ?)";
-        
+    public boolean follow(int followerId, int followingId) throws SQLException {
+        if (followerId == followingId) return false;
+        String sql = "INSERT IGNORE INTO follows_list (follower_id, following_id) VALUES (?, ?)";
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
             stmt.setInt(1, followerId);
             stmt.setInt(2, followingId);
             return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error following user: " + e.getMessage());
-            return false;
         }
     }
 
-    /**
-     * Unfollow a user
-     */
-    public boolean unfollow(int followerId, int followingId) {
-        String sql = "DELETE FROM follows WHERE follower_id = ? AND following_id = ?";
-        
+    public boolean unfollow(int followerId, int followingId) throws SQLException {
+        String sql = "DELETE FROM follows_list WHERE follower_id = ? AND following_id = ?";
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
             stmt.setInt(1, followerId);
             stmt.setInt(2, followingId);
             return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error unfollowing user: " + e.getMessage());
-            return false;
         }
     }
 
-    /**
-     * Check if user is following another user
-     */
-    public boolean isFollowing(int followerId, int followingId) {
-        String sql = "SELECT COUNT(*) FROM follows WHERE follower_id = ? AND following_id = ?";
-        
+    public boolean isFollowing(int followerId, int followingId) throws SQLException {
+        String sql = "SELECT 1 FROM follows_list WHERE follower_id = ? AND following_id = ?";
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
             stmt.setInt(1, followerId);
             stmt.setInt(2, followingId);
-            ResultSet rs = stmt.executeQuery();
-            
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            System.err.println("Error checking follow status: " + e.getMessage());
+            return stmt.executeQuery().next();
         }
-        return false;
     }
 
-    /**
-     * Get followers of a user
-     */
-    public List<User> getFollowers(int userId, int page, int limit) {
+    /** Get profiles that a user follows */
+    public List<Profile> getFollowing(int profileId) throws SQLException {
         String sql = """
-            SELECT u.id, u.username, u.bio, u.avatar_url, u.created_at
-            FROM follows f
-            JOIN users u ON f.follower_id = u.id
-            WHERE f.following_id = ?
-            ORDER BY f.created_at DESC
-            LIMIT ? OFFSET ?
+            SELECT p.profile_id, p.user_id, p.display_name, p.bio, p.favorite_movie,
+                   p.profile_pic, p.join_date_id, u.email,
+                   d.full_date AS join_date
+            FROM follows_list fl
+            JOIN profiles p ON fl.following_id = p.profile_id
+            JOIN users u ON p.user_id = u.user_id
+            LEFT JOIN date_dim d ON p.join_date_id = d.date_id
+            WHERE fl.follower_id = ?
             """;
-        List<User> followers = new ArrayList<>();
-        
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, userId);
-            stmt.setInt(2, limit);
-            stmt.setInt(3, (page - 1) * limit);
-            ResultSet rs = stmt.executeQuery();
-            
-            while (rs.next()) {
-                followers.add(mapResultSetToUser(rs));
-            }
-        } catch (SQLException e) {
-            System.err.println("Error getting followers: " + e.getMessage());
-        }
-        return followers;
+        return executeProfileList(sql, profileId);
     }
 
-    /**
-     * Get users that a user is following
-     */
-    public List<User> getFollowing(int userId, int page, int limit) {
+    /** Get profiles that follow a user */
+    public List<Profile> getFollowers(int profileId) throws SQLException {
         String sql = """
-            SELECT u.id, u.username, u.bio, u.avatar_url, u.created_at
-            FROM follows f
-            JOIN users u ON f.following_id = u.id
-            WHERE f.follower_id = ?
-            ORDER BY f.created_at DESC
-            LIMIT ? OFFSET ?
+            SELECT p.profile_id, p.user_id, p.display_name, p.bio, p.favorite_movie,
+                   p.profile_pic, p.join_date_id, u.email,
+                   d.full_date AS join_date
+            FROM follows_list fl
+            JOIN profiles p ON fl.follower_id = p.profile_id
+            JOIN users u ON p.user_id = u.user_id
+            LEFT JOIN date_dim d ON p.join_date_id = d.date_id
+            WHERE fl.following_id = ?
             """;
-        List<User> following = new ArrayList<>();
-        
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, userId);
-            stmt.setInt(2, limit);
-            stmt.setInt(3, (page - 1) * limit);
-            ResultSet rs = stmt.executeQuery();
-            
-            while (rs.next()) {
-                following.add(mapResultSetToUser(rs));
-            }
-        } catch (SQLException e) {
-            System.err.println("Error getting following: " + e.getMessage());
-        }
-        return following;
+        return executeProfileList(sql, profileId);
     }
 
-    /**
-     * Count followers
-     */
-    public int countFollowers(int userId) {
-        String sql = "SELECT COUNT(*) FROM follows WHERE following_id = ?";
-        
+    public int getFollowerCount(int profileId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM follows_list WHERE following_id = ?";
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, userId);
+            stmt.setInt(1, profileId);
             ResultSet rs = stmt.executeQuery();
-            
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            System.err.println("Error counting followers: " + e.getMessage());
+            if (rs.next()) return rs.getInt(1);
         }
         return 0;
     }
 
-    /**
-     * Count following
-     */
-    public int countFollowing(int userId) {
-        String sql = "SELECT COUNT(*) FROM follows WHERE follower_id = ?";
-        
+    public int getFollowingCount(int profileId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM follows_list WHERE follower_id = ?";
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, userId);
+            stmt.setInt(1, profileId);
             ResultSet rs = stmt.executeQuery();
-            
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            System.err.println("Error counting following: " + e.getMessage());
+            if (rs.next()) return rs.getInt(1);
         }
         return 0;
     }
 
-    /**
-     * Get IDs of users that a user is following (for activity feed)
-     */
-    public List<Integer> getFollowingIds(int userId) {
-        String sql = "SELECT following_id FROM follows WHERE follower_id = ?";
-        List<Integer> ids = new ArrayList<>();
-        
+    private List<Profile> executeProfileList(String sql, int profileId) throws SQLException {
+        List<Profile> profiles = new ArrayList<>();
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, userId);
+            stmt.setInt(1, profileId);
             ResultSet rs = stmt.executeQuery();
-            
             while (rs.next()) {
-                ids.add(rs.getInt("following_id"));
+                Profile p = new Profile();
+                p.setProfileId(rs.getInt("profile_id"));
+                p.setUserId(rs.getInt("user_id"));
+                p.setDisplayName(rs.getString("display_name"));
+                p.setBio(rs.getString("bio"));
+                p.setFavoriteMovie(rs.getString("favorite_movie"));
+                p.setProfilePic(rs.getString("profile_pic"));
+                p.setJoinDateId(rs.getInt("join_date_id"));
+                p.setEmail(rs.getString("email"));
+                Date joinDate = rs.getDate("join_date");
+                if (joinDate != null) p.setJoinDate(joinDate.toString());
+                profiles.add(p);
             }
-        } catch (SQLException e) {
-            System.err.println("Error getting following IDs: " + e.getMessage());
         }
-        return ids;
-    }
-
-    /**
-     * Search users by username
-     */
-    public List<User> searchUsers(String query, int page, int limit) {
-        String sql = """
-            SELECT id, username, bio, avatar_url, created_at
-            FROM users
-            WHERE username LIKE ?
-            ORDER BY username
-            LIMIT ? OFFSET ?
-            """;
-        List<User> users = new ArrayList<>();
-        
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, "%" + query + "%");
-            stmt.setInt(2, limit);
-            stmt.setInt(3, (page - 1) * limit);
-            ResultSet rs = stmt.executeQuery();
-            
-            while (rs.next()) {
-                users.add(mapResultSetToUser(rs));
-            }
-        } catch (SQLException e) {
-            System.err.println("Error searching users: " + e.getMessage());
-        }
-        return users;
-    }
-
-    private User mapResultSetToUser(ResultSet rs) throws SQLException {
-        User user = new User();
-        user.setId(rs.getInt("id"));
-        user.setUsername(rs.getString("username"));
-        user.setBio(rs.getString("bio"));
-        user.setAvatarUrl(rs.getString("avatar_url"));
-        Timestamp createdAt = rs.getTimestamp("created_at");
-        if (createdAt != null) user.setCreatedAt(createdAt.toLocalDateTime());
-        return user;
+        return profiles;
     }
 }

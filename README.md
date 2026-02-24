@@ -1,8 +1,8 @@
 # OnlyFilms - Movie Review Platform
 
-A movie review platform inspired by Letterboxd and MyAnimeList, built with Java (no Spring Boot) and MySQL.
+A movie review platform inspired by Letterboxd and MyAnimeList, built with Java and MySQL.
 
-## 🎬 Features
+## Features
 
 - **User Authentication** - Register, login with JWT tokens
 - **Movie Database** - Browse movies synced from TMDB API
@@ -12,10 +12,10 @@ A movie review platform inspired by Letterboxd and MyAnimeList, built with Java 
 - **Custom Lists** - Create and share movie lists
 - **Social Features** - Follow users, activity feed
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Backend
-- Java 17+ (No Spring Boot)
+- Java 17+
 - Embedded Jetty Server
 - MySQL Database (XAMPP)
 - JWT Authentication
@@ -27,7 +27,7 @@ A movie review platform inspired by Letterboxd and MyAnimeList, built with Java 
 - Vanilla HTML/CSS/JavaScript
 - Responsive dark theme design
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 OnlyFilms/
@@ -53,7 +53,7 @@ OnlyFilms/
 └── README.md
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Java 17 or higher
@@ -105,38 +105,89 @@ cd frontend
 python -m http.server 3000
 ```
 
-## 📡 API Endpoints
+
+## API Endpoints
+
+All endpoints are prefixed with `/api/`. Most endpoints return JSON. Endpoints requiring authentication expect a JWT in the `Authorization: Bearer <token>` header.
 
 ### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login, returns JWT
+- `POST /api/auth/register` — Register a new user
+- `POST /api/auth/login` — Login, returns JWT
 
 ### Movies
-- `GET /api/movies` - List movies (paginated)
-- `GET /api/movies/{id}` - Get movie details
-- `GET /api/movies/search?q=` - Search movies
+- `GET /api/movies` — List movies (paginated, supports `page` and `size` params)
+- `GET /api/movies/{id}` — Get movie details by TMDB ID
+- `GET /api/movies/search?q=` — Search movies by title
 
 ### Genres
-- `GET /api/genres` - List all genres
-- `GET /api/genres/{id}` - Get genre with movies
+- `GET /api/genres` — List all genres
+- `GET /api/genres/{id}` — Get genre details and movies
 
 ### Reviews
-- `GET /api/reviews/movie/{id}` - Get movie reviews
-- `POST /api/reviews` - Create review (auth required)
-- `PUT /api/reviews/{id}` - Update review (auth required)
-- `DELETE /api/reviews/{id}` - Delete review (auth required)
+- `GET /api/reviews/movie/{id}` — Get reviews for a movie
+- `POST /api/reviews` — Create review (auth required)
+- `PUT /api/reviews/{id}` — Update review (auth required)
+- `DELETE /api/reviews/{id}` — Delete review (auth required)
 
 ### Watchlist
-- `GET /api/watchlist` - Get user's watchlist (auth required)
-- `POST /api/watchlist/{movieId}` - Add to watchlist
-- `DELETE /api/watchlist/{movieId}` - Remove from watchlist
+- `GET /api/watchlist` — Get your watchlist (auth required)
+- `POST /api/watchlist/{movieId}` — Add movie to watchlist (auth required)
+- `DELETE /api/watchlist/{movieId}` — Remove movie from watchlist (auth required)
 
-### Users
-- `GET /api/users/{id}` - Get user profile
-- `GET /api/users/{id}/followers` - Get followers
-- `GET /api/users/{id}/following` - Get following
-- `POST /api/users/{id}/follow` - Follow user (auth required)
+### Users & Profiles
+- `GET /api/users/{id}` — Get user profile by ID
+- `GET /api/users/{id}/followers` — List followers
+- `GET /api/users/{id}/following` — List following
+- `POST /api/users/{id}/follow` — Follow/unfollow user (auth required)
 
-## 📄 License
+### Lists
+- `GET /api/lists` — List public lists (paginated)
+- `GET /api/lists/{id}` — Get a list and its films (if public or owned)
+- `GET /api/lists/profile/{profileId}` — Get all lists by a user
+- `POST /api/lists` — Create a new list (auth required)
+	- Body: `{ "listName": string, "listDescription"?: string, "isPublic"?: boolean }`
+- `PUT /api/lists/{id}` — Update a list (auth required, owner only)
+	- Body: `{ "listName"?: string, "listDescription"?: string, "isPublic"?: boolean }`
+- `DELETE /api/lists/{id}` — Delete a list (auth required, owner only)
+- `POST /api/lists/{id}/films` — Add a film to a list (auth required, owner only)
+	- Body: `{ "tmdbId": number, "filmTitle": string, "releaseYear"?: number, "posterUrl"?: string }`
+- `DELETE /api/lists/{id}/films/{tmdbId}` — Remove a film from a list (auth required, owner only)
+
+#### Example: Add Film to List
+```bash
+curl -X POST http://localhost:8080/api/lists/5/films \
+	-H "Authorization: Bearer <token>" \
+	-H "Content-Type: application/json" \
+	-d '{ "tmdbId": 603, "filmTitle": "The Matrix", "releaseYear": 1999, "posterUrl": "https://image.tmdb.org/t/p/w500/xyz.jpg" }'
+```
+
+### Favorites
+- `GET /api/favorites` — Get your favorite films (auth required)
+- `POST /api/favorites/{tmdbId}` — Add a film to favorites (auth required)
+- `DELETE /api/favorites/{tmdbId}` — Remove a film from favorites (auth required)
+
+### Activity Feed
+- `GET /api/activity` — Get recent activity (auth required)
+
+### Profile
+- `GET /api/profile` — Get your profile (auth required)
+- `PUT /api/profile` — Update profile (bio, avatar, etc., auth required)
+
+### Health
+- `GET /api/health` — Health check endpoint
+
+---
+
+## Usage Notes
+
+- **Authentication:** Most write operations require a JWT. Pass it as `Authorization: Bearer <token>`.
+- **Error Handling:** Errors return JSON with `success: false` and a `message` field.
+- **CORS:** All endpoints support CORS for frontend integration.
+
+## Contributing
+
+Pull requests are welcome! Please open issues for bugs or feature requests.
+
+## License
 
 MIT License

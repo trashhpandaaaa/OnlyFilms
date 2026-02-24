@@ -46,6 +46,20 @@ public class AuthFilter implements Filter {
         String path = httpRequest.getRequestURI();
         String method = httpRequest.getMethod();
 
+        // Parse token eagerly so public endpoints can still receive profile context.
+        String authHeader = httpRequest.getHeader("Authorization");
+        String token = JwtUtil.extractTokenFromHeader(authHeader);
+        Claims claims = null;
+        if (token != null) {
+            claims = JwtUtil.validateToken(token);
+            if (claims != null) {
+                httpRequest.setAttribute("userId", Integer.parseInt(claims.getSubject()));
+                Number profileIdNum = claims.get("profileId", Number.class);
+                httpRequest.setAttribute("profileId", profileIdNum != null ? profileIdNum.intValue() : null);
+                httpRequest.setAttribute("displayName", claims.get("displayName", String.class));
+            }
+        }
+
         // Allow preflight requests
         if ("OPTIONS".equalsIgnoreCase(method)) {
             chain.doFilter(request, response);
@@ -58,26 +72,15 @@ public class AuthFilter implements Filter {
             return;
         }
 
-        // Get Authorization header
-        String authHeader = httpRequest.getHeader("Authorization");
-        String token = JwtUtil.extractTokenFromHeader(authHeader);
-
         if (token == null) {
             JsonUtil.writeUnauthorized(httpResponse, "No token provided");
             return;
         }
 
-        // Validate token
-        Claims claims = JwtUtil.validateToken(token);
-        
         if (claims == null) {
             JsonUtil.writeUnauthorized(httpResponse, "Invalid or expired token");
             return;
         }
-
-        // Add user info to request attributes for use in servlets
-        httpRequest.setAttribute("userId", Integer.parseInt(claims.getSubject()));
-        httpRequest.setAttribute("username", claims.get("username", String.class));
 
         chain.doFilter(request, response);
     }
@@ -101,25 +104,40 @@ public class AuthFilter implements Filter {
             return true;
         }
 
-        // GET requests to movies, genres, reviews, and public lists are public
+        // GET requests to movies, genres, activities, and public lists are public
         if ("GET".equalsIgnoreCase(method)) {
             if (path.startsWith("/api/movies") || path.startsWith("/api/genres")) {
                 return true;
             }
-            // Reviews are publicly readable
-            if (path.startsWith("/api/reviews")) {
-                return true;
+            // Activities are publicly readable
+            if (path.startsWith("/api/activity")) {
+                // But /api/activity/feed requires auth
+                if (!path.equals("/api/activity/feed")) {
+                    return true;
+                }
             }
-            // Public lists can be viewed without auth (checked in servlet)
+            // Public lists can be viewed without auth
             if (path.startsWith("/api/lists")) {
                 return true;
             }
-            // User profiles, followers, following are public (except /me)
+            // User profiles are public (except /me)
             if (path.startsWith("/api/users") && !path.equals("/api/users/me")) {
                 return true;
             }
-            // Activity feeds: user activity and recent are public, /feed requires auth
-            if (path.startsWith("/api/activity/user/") || path.equals("/api/activity/recent")) {
+            // Favorites are publicly readable
+            if (path.startsWith("/api/favorites")) {
+                return true;
+            }
+            // Comments are publicly readable
+            if (path.startsWith("/api/comments")) {
+                return true;
+            }
+            // Follows are publicly readable
+            if (path.startsWith("/api/follows")) {
+                return true;
+            }
+            // Likes are publicly readable
+            if (path.startsWith("/api/likes")) {
                 return true;
             }
         }

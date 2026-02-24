@@ -1,24 +1,19 @@
 package com.onlyfilms.model;
 
 public class Genre {
-    private int id;
-    private String name;
-    private String slug;
-    
+    private int genreId;
+    private String genre;
+
     public Genre() {}
-    
-    public Genre(String name, String slug) {
-        this.name = name;
-        this.slug = slug;
+
+    public Genre(int genreId, String genre) {
+        this.genreId = genreId;
+        this.genre = genre;
     }
-    
-    // Getters and setters
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
-    
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    
-    public String getSlug() { return slug; }
-    public void setSlug(String slug) { this.slug = slug; }
+
+    public int getGenreId() { return genreId; }
+    public void setGenreId(int genreId) { this.genreId = genreId; }
+
+    public String getGenre() { return genre; }
+    public void setGenre(String genre) { this.genre = genre; }
 }

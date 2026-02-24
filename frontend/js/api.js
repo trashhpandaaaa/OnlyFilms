@@ -1,6 +1,7 @@
 /**
  * OnlyFilms API Client
  * Handles all communication with the backend API
+ * Updated for Letterboxd ERD schema
  */
 
 const API_BASE_URL = 'http://localhost:8080/api';
@@ -16,7 +17,7 @@ const TokenManager = {
     }
 };
 
-// User management
+// User management (stores profile info locally)
 const UserManager = {
     get: () => {
         const user = localStorage.getItem('onlyfilms_user');
@@ -46,7 +47,6 @@ async function apiRequest(endpoint, options = {}) {
             throw new Error(json.message || 'Request failed');
         }
         
-        // Backend wraps response in {success, message, data}
         return json.data !== undefined ? json.data : json;
     } catch (error) {
         console.error(`API Error [${endpoint}]:`, error);
@@ -56,36 +56,42 @@ async function apiRequest(endpoint, options = {}) {
 
 // ===== Auth API =====
 const AuthAPI = {
-    async register(username, email, password) {
+    async register(email, password, displayName) {
         const data = await apiRequest('/auth/register', {
             method: 'POST',
-            body: JSON.stringify({ username, email, password })
+            body: JSON.stringify({ email, password, displayName })
         });
         
         if (data.token) {
             TokenManager.set(data.token);
-            UserManager.set(data.user);
+            UserManager.set({
+                userId: data.userId,
+                profileId: data.profileId,
+                email: data.email,
+                displayName: data.displayName
+            });
         }
         
         return data;
     },
 
-    async login(username, password) {
+    async login(email, password) {
         const data = await apiRequest('/auth/login', {
             method: 'POST',
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ email, password })
         });
         
         if (data.token) {
             TokenManager.set(data.token);
-            UserManager.set(data.user);
+            UserManager.set({
+                userId: data.userId,
+                profileId: data.profileId,
+                email: data.email,
+                displayName: data.displayName
+            });
         }
         
         return data;
-    },
-
-    async getMe() {
-        return apiRequest('/auth/me');
     },
 
     logout() {
@@ -98,50 +104,38 @@ const AuthAPI = {
     }
 };
 
-// ===== Movies API =====
+// ===== Movies API (TMDB proxy) =====
 const MoviesAPI = {
-    async getAll(page = 1, pageSize = 20) {
-        return apiRequest(`/movies?page=${page}&pageSize=${pageSize}`);
+    async getPopular(page = 1) {
+        return apiRequest(`/movies/popular?page=${page}`);
+    },
+
+    async getTopRated(page = 1) {
+        return apiRequest(`/movies/top-rated?page=${page}`);
+    },
+
+    async getNowPlaying(page = 1) {
+        return apiRequest(`/movies/now-playing?page=${page}`);
+    },
+
+    async getUpcoming(page = 1) {
+        return apiRequest(`/movies/upcoming?page=${page}`);
+    },
+
+    async getTrending(timeWindow = 'week', page = 1) {
+        return apiRequest(`/movies/trending/${timeWindow}?page=${page}`);
+    },
+
+    async search(query, page = 1) {
+        return apiRequest(`/movies/search?q=${encodeURIComponent(query)}&page=${page}`);
     },
 
     async getById(id) {
         return apiRequest(`/movies/${id}`);
     },
 
-    async search(query, page = 1, pageSize = 20) {
-        return apiRequest(`/movies?search=${encodeURIComponent(query)}&page=${page}&pageSize=${pageSize}`);
-    },
-
-    async getByGenre(genreId, page = 1, pageSize = 20) {
-        return apiRequest(`/movies?genre=${genreId}&page=${page}&pageSize=${pageSize}`);
-    },
-
-    async getByCategory(category, page = 1) {
-        return apiRequest(`/movies?category=${category}&page=${page}`);
-    },
-    
-    async getNowPlaying(page = 1) {
-        return apiRequest(`/movies/now-playing?page=${page}`);
-    },
-    
-    async getUpcoming(page = 1) {
-        return apiRequest(`/movies/upcoming?page=${page}`);
-    },
-    
-    async discover(options = {}) {
-        const params = new URLSearchParams();
-        params.append('page', options.page || 1);
-        if (options.sort) params.append('sort', options.sort);
-        if (options.year) params.append('year', options.year);
-        if (options.yearGte) params.append('yearGte', options.yearGte);
-        if (options.yearLte) params.append('yearLte', options.yearLte);
-        if (options.ratingGte) params.append('ratingGte', options.ratingGte);
-        if (options.genre) params.append('genre', options.genre);
-        return apiRequest(`/movies?${params.toString()}`);
-    },
-
-    async getTopRated(limit = 10) {
-        return apiRequest(`/movies/top?limit=${limit}`);
+    async getByGenre(genreId, page = 1) {
+        return apiRequest(`/movies/genre/${genreId}?page=${page}`);
     }
 };
 
@@ -149,112 +143,218 @@ const MoviesAPI = {
 const GenresAPI = {
     async getAll() {
         return apiRequest('/genres');
-    },
-
-    async getById(id) {
-        return apiRequest(`/genres/${id}`);
     }
 };
 
-// ===== Reviews API =====
-const ReviewsAPI = {
-    async getByMovie(movieId, page = 1, pageSize = 10) {
-        return apiRequest(`/reviews/movie/${movieId}?page=${page}&pageSize=${pageSize}`);
+// ===== Activity API (reviews + watch logs) =====
+const ActivityAPI = {
+    async getRecent(limit = 20, offset = 0) {
+        return apiRequest(`/activity/recent?limit=${limit}&offset=${offset}`);
     },
 
-    async create(movieId, rating, content) {
-        return apiRequest('/reviews', {
+    async getFeed(limit = 20, offset = 0) {
+        return apiRequest(`/activity/feed?limit=${limit}&offset=${offset}`);
+    },
+
+    async getByProfile(profileId, limit = 20, offset = 0) {
+        return apiRequest(`/activity/profile/${profileId}?limit=${limit}&offset=${offset}`);
+    },
+
+    async getByFilm(filmId, limit = 20, offset = 0) {
+        return apiRequest(`/activity/film/${filmId}?limit=${limit}&offset=${offset}`);
+    },
+
+    async getById(activityId) {
+        return apiRequest(`/activity/${activityId}`);
+    },
+
+    async create(tmdbId, filmTitle, releaseYear, posterUrl, rating, watchedStatus, reviewDescription) {
+        return apiRequest('/activity', {
             method: 'POST',
-            body: JSON.stringify({ movieId, rating, content })
+            body: JSON.stringify({ tmdbId, filmTitle, releaseYear, posterUrl, rating, watchedStatus, reviewDescription })
         });
     },
 
-    async update(reviewId, rating, content) {
-        return apiRequest(`/reviews/${reviewId}`, {
+    async update(activityId, data) {
+        return apiRequest(`/activity/${activityId}`, {
             method: 'PUT',
-            body: JSON.stringify({ rating, content })
+            body: JSON.stringify(data)
         });
     },
 
-    async delete(reviewId) {
-        return apiRequest(`/reviews/${reviewId}`, {
-            method: 'DELETE'
-        });
-    },
-
-    async like(reviewId) {
-        return apiRequest(`/reviews/${reviewId}/like`, {
-            method: 'POST'
-        });
-    },
-
-    async unlike(reviewId) {
-        return apiRequest(`/reviews/${reviewId}/like`, {
+    async delete(activityId) {
+        return apiRequest(`/activity/${activityId}`, {
             method: 'DELETE'
         });
     }
 };
 
-// ===== Watchlist API =====
-const WatchlistAPI = {
-    async get() {
-        return apiRequest('/watchlist');
+// ===== Comments API =====
+const CommentsAPI = {
+    async getByActivity(activityId) {
+        return apiRequest(`/comments/activity/${activityId}`);
     },
 
-    async add(movieId) {
-        return apiRequest('/watchlist', {
+    async create(activityId, commentContent) {
+        return apiRequest('/comments', {
             method: 'POST',
-            body: JSON.stringify({ movieId })
+            body: JSON.stringify({ activityId, commentContent })
         });
     },
 
-    async remove(movieId) {
-        return apiRequest(`/watchlist/${movieId}`, {
+    async delete(commentId) {
+        return apiRequest(`/comments/${commentId}`, {
+            method: 'DELETE'
+        });
+    }
+};
+
+// ===== Likes API =====
+const LikesAPI = {
+    async toggle(activityId) {
+        return apiRequest('/likes/toggle', {
+            method: 'POST',
+            body: JSON.stringify({ activityId })
+        });
+    },
+
+    async getByActivity(activityId) {
+        return apiRequest(`/likes/activity/${activityId}`);
+    }
+};
+
+// ===== Favorites API =====
+const FavoritesAPI = {
+    async getByProfile(profileId) {
+        return apiRequest(`/favorites/${profileId}`);
+    },
+
+    async add(tmdbId, filmTitle, releaseYear, posterUrl) {
+        return apiRequest('/favorites', {
+            method: 'POST',
+            body: JSON.stringify({ tmdbId, filmTitle, releaseYear, posterUrl })
+        });
+    },
+
+    async remove(filmId) {
+        return apiRequest(`/favorites/${filmId}`, {
             method: 'DELETE'
         });
     },
 
-    async markWatched(movieId) {
-        return apiRequest(`/watchlist/${movieId}/watched`, {
-            method: 'POST'
+    async check(filmId) {
+        return apiRequest(`/favorites/check/${filmId}`);
+    }
+};
+
+// ===== Lists API =====
+const ListsAPI = {
+    async getPublic(limit = 20, offset = 0) {
+        return apiRequest(`/lists?limit=${limit}&offset=${offset}`);
+    },
+
+    async getByProfile(profileId) {
+        return apiRequest(`/lists/profile/${profileId}`);
+    },
+
+    async getById(listId) {
+        return apiRequest(`/lists/${listId}`);
+    },
+
+    async create(listName, listDescription, isPublic = true) {
+        return apiRequest('/lists', {
+            method: 'POST',
+            body: JSON.stringify({ listName, listDescription, isPublic })
+        });
+    },
+
+    async update(listId, data) {
+        return apiRequest(`/lists/${listId}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    },
+
+    async delete(listId) {
+        return apiRequest(`/lists/${listId}`, {
+            method: 'DELETE'
+        });
+    },
+
+    async addFilm(listId, tmdbId, filmTitle, releaseYear, posterUrl) {
+        const parsedTmdbId = Number(tmdbId);
+        const parsedReleaseYear = releaseYear === '' || releaseYear == null ? null : Number(releaseYear);
+        return apiRequest(`/lists/${listId}/films`, {
+            method: 'POST',
+            body: JSON.stringify({
+                tmdbId: parsedTmdbId,
+                filmTitle,
+                releaseYear: Number.isFinite(parsedReleaseYear) ? parsedReleaseYear : null,
+                posterUrl: posterUrl || null
+            })
+        });
+    },
+
+    async removeFilm(listId, filmId) {
+        return apiRequest(`/lists/${listId}/films/${filmId}`, {
+            method: 'DELETE'
         });
     }
 };
 
 // ===== Users API =====
 const UsersAPI = {
-    async getProfile(userId) {
-        return apiRequest(`/users/${userId}`);
+    async getMe() {
+        return apiRequest('/users/me');
+    },
+
+    async getProfile(profileId) {
+        return apiRequest(`/users/${profileId}`);
     },
 
     async updateProfile(data) {
-        return apiRequest('/users/profile', {
+        return apiRequest('/users/me', {
             method: 'PUT',
             body: JSON.stringify(data)
         });
     },
-    
-    async getStats(userId) {
-        return apiRequest(`/users/${userId}/stats`);
-    },
 
-    async follow(userId) {
-        return apiRequest(`/users/${userId}/follow`, {
+    async search(query) {
+        return apiRequest(`/users/search?q=${encodeURIComponent(query)}`);
+    }
+};
+
+// ===== Follows API =====
+const FollowsAPI = {
+    async follow(profileId) {
+        return apiRequest(`/follows/${profileId}`, {
             method: 'POST'
         });
     },
 
-    async unfollow(userId) {
-        return apiRequest(`/users/${userId}/follow`, {
+    async unfollow(profileId) {
+        return apiRequest(`/follows/${profileId}`, {
             method: 'DELETE'
         });
+    },
+
+    async getFollowers(profileId) {
+        return apiRequest(`/follows/${profileId}/followers`);
+    },
+
+    async getFollowing(profileId) {
+        return apiRequest(`/follows/${profileId}/following`);
+    },
+
+    async getStatus(profileId) {
+        return apiRequest(`/follows/${profileId}`);
     }
 };
 
 // ===== Person API =====
 const PersonAPI = {
     async getById(id) {
-        return apiRequest(`/person/${id}`);
+        return apiRequest(`/tmdb/person/${id}`);
     }
 };
 
@@ -263,9 +363,13 @@ window.API = {
     Auth: AuthAPI,
     Movies: MoviesAPI,
     Genres: GenresAPI,
-    Reviews: ReviewsAPI,
-    Watchlist: WatchlistAPI,
+    Activity: ActivityAPI,
+    Comments: CommentsAPI,
+    Likes: LikesAPI,
+    Favorites: FavoritesAPI,
+    Lists: ListsAPI,
     Users: UsersAPI,
+    Follows: FollowsAPI,
     Person: PersonAPI,
     Token: TokenManager,
     User: UserManager

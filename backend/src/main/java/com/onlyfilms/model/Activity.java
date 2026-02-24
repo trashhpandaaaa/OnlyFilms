@@ -1,167 +1,80 @@
 package com.onlyfilms.model;
 
-import java.sql.Timestamp;
-
-/**
- * Activity entity - represents an activity item in the feed
- */
 public class Activity {
-    
-    public enum ActivityType {
-        REVIEW,      // User posted a review
-        WATCH,       // User watched a movie
-        LIST_CREATE, // User created a list
-        LIST_ADD,    // User added movie to list
-        FOLLOW       // User followed someone
-    }
+    private int activityId;
+    private int profileId;
+    private int filmId;
+    private Integer reviewDateId;
+    private Integer watchedDateId;
+    private Double rating;
+    private String watchedStatus; // "watched", "rewatched", "want_to_watch"
+    private String reviewDescription;
 
-    private ActivityType type;
-    private Timestamp timestamp;
+    // Transient fields for display
+    private String displayName;
+    private String profilePic;
+    private String filmTitle;
+    private String posterUrl;
+    private Integer tmdbId;
+    private String reviewDate;   // resolved from date_dim
+    private String watchedDate;  // resolved from date_dim
+    private int likeCount;
+    private int commentCount;
+    private Boolean likedByCurrentUser;
 
-    // User who performed the action
-    private int userId;
-    private String username;
-    private String userAvatarUrl;
-
-    // Movie info (for REVIEW, WATCH, LIST_ADD)
-    private Integer movieId;
-    private String movieTitle;
-    private String moviePosterUrl;
-
-    // Review info (for REVIEW)
-    private Integer reviewId;
-    private Integer rating;
-    private String reviewContent;
-
-    // List info (for LIST_CREATE, LIST_ADD)
-    private Integer listId;
-    private String listName;
-
-    // Target user (for FOLLOW)
-    private Integer targetUserId;
-    private String targetUsername;
-
-    // Default constructor
     public Activity() {}
 
-    // Getters and Setters
-    public ActivityType getType() {
-        return type;
-    }
+    public int getActivityId() { return activityId; }
+    public void setActivityId(int activityId) { this.activityId = activityId; }
 
-    public void setType(ActivityType type) {
-        this.type = type;
-    }
+    public int getProfileId() { return profileId; }
+    public void setProfileId(int profileId) { this.profileId = profileId; }
 
-    public Timestamp getTimestamp() {
-        return timestamp;
-    }
+    public int getFilmId() { return filmId; }
+    public void setFilmId(int filmId) { this.filmId = filmId; }
 
-    public void setTimestamp(Timestamp timestamp) {
-        this.timestamp = timestamp;
-    }
+    public Integer getReviewDateId() { return reviewDateId; }
+    public void setReviewDateId(Integer reviewDateId) { this.reviewDateId = reviewDateId; }
 
-    public int getUserId() {
-        return userId;
-    }
+    public Integer getWatchedDateId() { return watchedDateId; }
+    public void setWatchedDateId(Integer watchedDateId) { this.watchedDateId = watchedDateId; }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
+    public Double getRating() { return rating; }
+    public void setRating(Double rating) { this.rating = rating; }
 
-    public String getUsername() {
-        return username;
-    }
+    public String getWatchedStatus() { return watchedStatus; }
+    public void setWatchedStatus(String watchedStatus) { this.watchedStatus = watchedStatus; }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+    public String getReviewDescription() { return reviewDescription; }
+    public void setReviewDescription(String reviewDescription) { this.reviewDescription = reviewDescription; }
 
-    public String getUserAvatarUrl() {
-        return userAvatarUrl;
-    }
+    public String getDisplayName() { return displayName; }
+    public void setDisplayName(String displayName) { this.displayName = displayName; }
 
-    public void setUserAvatarUrl(String userAvatarUrl) {
-        this.userAvatarUrl = userAvatarUrl;
-    }
+    public String getProfilePic() { return profilePic; }
+    public void setProfilePic(String profilePic) { this.profilePic = profilePic; }
 
-    public Integer getMovieId() {
-        return movieId;
-    }
+    public String getFilmTitle() { return filmTitle; }
+    public void setFilmTitle(String filmTitle) { this.filmTitle = filmTitle; }
 
-    public void setMovieId(Integer movieId) {
-        this.movieId = movieId;
-    }
+    public String getPosterUrl() { return posterUrl; }
+    public void setPosterUrl(String posterUrl) { this.posterUrl = posterUrl; }
 
-    public String getMovieTitle() {
-        return movieTitle;
-    }
+    public Integer getTmdbId() { return tmdbId; }
+    public void setTmdbId(Integer tmdbId) { this.tmdbId = tmdbId; }
 
-    public void setMovieTitle(String movieTitle) {
-        this.movieTitle = movieTitle;
-    }
+    public String getReviewDate() { return reviewDate; }
+    public void setReviewDate(String reviewDate) { this.reviewDate = reviewDate; }
 
-    public String getMoviePosterUrl() {
-        return moviePosterUrl;
-    }
+    public String getWatchedDate() { return watchedDate; }
+    public void setWatchedDate(String watchedDate) { this.watchedDate = watchedDate; }
 
-    public void setMoviePosterUrl(String moviePosterUrl) {
-        this.moviePosterUrl = moviePosterUrl;
-    }
+    public int getLikeCount() { return likeCount; }
+    public void setLikeCount(int likeCount) { this.likeCount = likeCount; }
 
-    public Integer getReviewId() {
-        return reviewId;
-    }
+    public int getCommentCount() { return commentCount; }
+    public void setCommentCount(int commentCount) { this.commentCount = commentCount; }
 
-    public void setReviewId(Integer reviewId) {
-        this.reviewId = reviewId;
-    }
-
-    public Integer getRating() {
-        return rating;
-    }
-
-    public void setRating(Integer rating) {
-        this.rating = rating;
-    }
-
-    public String getReviewContent() {
-        return reviewContent;
-    }
-
-    public void setReviewContent(String reviewContent) {
-        this.reviewContent = reviewContent;
-    }
-
-    public Integer getListId() {
-        return listId;
-    }
-
-    public void setListId(Integer listId) {
-        this.listId = listId;
-    }
-
-    public String getListName() {
-        return listName;
-    }
-
-    public void setListName(String listName) {
-        this.listName = listName;
-    }
-
-    public Integer getTargetUserId() {
-        return targetUserId;
-    }
-
-    public void setTargetUserId(Integer targetUserId) {
-        this.targetUserId = targetUserId;
-    }
-
-    public String getTargetUsername() {
-        return targetUsername;
-    }
-
-    public void setTargetUsername(String targetUsername) {
-        this.targetUsername = targetUsername;
-    }
+    public Boolean getLikedByCurrentUser() { return likedByCurrentUser; }
+    public void setLikedByCurrentUser(Boolean likedByCurrentUser) { this.likedByCurrentUser = likedByCurrentUser; }
 }

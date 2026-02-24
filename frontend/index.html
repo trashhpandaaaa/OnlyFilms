@@ -71,7 +71,7 @@
 
         <!-- HOME -->
         <section id="homeSection" class="page-section">
-            <div class="hero">
+            <div class="hero" id="heroSection">
                 <div class="hero-bg"></div>
                 <div class="hero-content">
                     <h1 class="hero-title">
@@ -176,6 +176,11 @@
             <div class="section-container" id="personDetail"><div class="loading-state">Loading...</div></div>
         </section>
 
+        <!-- USER PROFILE (other users) -->
+        <section id="userProfileSection" class="page-section hidden">
+            <div class="section-container" id="userProfileContainer"><div class="loading-state">Loading profile...</div></div>
+        </section>
+
         <!-- PROFILE -->
         <section id="profileSection" class="page-section hidden">
             <div class="section-container" id="profileContainer"><div class="loading-state">Loading profile...</div></div>
@@ -183,6 +188,21 @@
     </main>
 
     <!-- ========== MODALS ========== -->
+        <!-- Create List Modal -->
+        <div class="modal-overlay hidden" id="createListModal">
+            <div class="modal-backdrop" onclick="closeCreateListModal()"></div>
+            <div class="modal-card">
+                <button class="modal-close" onclick="closeCreateListModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+                <h2>Create New List</h2>
+                <form id="createListForm" onsubmit="handleCreateList(event)">
+                    <div class="form-group"><label>List Name</label><input type="text" id="createListName" placeholder="List name" required></div>
+                    <div class="form-group"><label>Description</label><textarea id="createListDescription" rows="2" placeholder="Describe your list..."></textarea></div>
+                    <div class="form-group"><label><input type="checkbox" id="createListPublic" checked> Public</label></div>
+                    <div class="form-error hidden" id="createListError"></div>
+                    <button type="submit" class="btn btn-primary btn-full btn-large">Create List</button>
+                </form>
+            </div>
+        </div>
     <!-- Login -->
     <div class="modal-overlay hidden" id="loginModal">
         <div class="modal-backdrop" onclick="closeModal('login')"></div>
@@ -192,7 +212,7 @@
             <h2>Welcome back</h2>
             <p class="modal-sub">Sign in to your account</p>
             <form id="loginForm" onsubmit="handleLogin(event)">
-                <div class="form-group"><label>Username</label><input type="text" id="loginUsername" placeholder="Enter your username" required></div>
+                <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="Enter your email" required></div>
                 <div class="form-group"><label>Password</label><input type="password" id="loginPassword" placeholder="Enter your password" required></div>
                 <div class="form-error hidden" id="loginError"></div>
                 <button type="submit" class="btn btn-primary btn-full btn-large">Sign In</button>
@@ -210,7 +230,7 @@
             <h2>Join OnlyFilms</h2>
             <p class="modal-sub">Create your free account</p>
             <form id="registerForm" onsubmit="handleRegister(event)">
-                <div class="form-group"><label>Username</label><input type="text" id="registerUsername" placeholder="Choose a username" required minlength="3"></div>
+                <div class="form-group"><label>Display Name</label><input type="text" id="registerDisplayName" placeholder="Choose a display name" required minlength="3"></div>
                 <div class="form-group"><label>Email</label><input type="email" id="registerEmail" placeholder="you@example.com" required></div>
                 <div class="form-group"><label>Password</label><input type="password" id="registerPassword" placeholder="At least 6 characters" required minlength="6"></div>
                 <div class="form-error hidden" id="registerError"></div>
@@ -225,10 +245,18 @@
         <div class="modal-backdrop" onclick="closeModal('review')"></div>
         <div class="modal-card modal-wide">
             <button class="modal-close" onclick="closeModal('review')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-            <h2>Write a Review</h2>
+            <h2>Log Activity</h2>
             <p class="modal-sub" id="reviewMovieTitle">Share your thoughts</p>
             <form id="reviewForm" onsubmit="handleReview(event)">
                 <input type="hidden" id="reviewMovieId">
+                <div class="form-group">
+                    <label>Watched Status</label>
+                    <select id="watchedStatus">
+                        <option value="WATCHED">Watched</option>
+                        <option value="REWATCHED">Rewatched</option>
+                        <option value="WANT_TO_WATCH">Want to Watch</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label>Your Rating</label>
                     <div class="rating-input">
@@ -248,7 +276,54 @@
                     <textarea id="reviewContent" rows="5" placeholder="What did you think of this film?"></textarea>
                 </div>
                 <div class="form-error hidden" id="reviewError"></div>
-                <button type="submit" class="btn btn-primary btn-full btn-large">Submit Review</button>
+                <button type="submit" class="btn btn-primary btn-full btn-large">Log Activity</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add to List Modal -->
+    <div class="modal-overlay hidden" id="addToListModal">
+        <div class="modal-backdrop" onclick="closeAddToListModal()"></div>
+        <div class="modal-card">
+            <button type="button" class="modal-close" onclick="closeAddToListModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+            <h2>Add to List</h2>
+            <div id="addToListBody">
+                <label for="addToListSelect">Select a list:</label>
+                <select id="addToListSelect"></select>
+                <button type="button" id="addToListConfirm" class="btn btn-primary" style="margin-top:1rem">Add</button>
+                <div id="addToListStatus" style="margin-top:0.5rem"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- List Detail Modal -->
+    <div class="modal-overlay hidden" id="listDetailModal">
+        <div class="modal-backdrop" onclick="closeModal('listDetail')"></div>
+        <div class="modal-card modal-wide">
+            <button type="button" class="modal-close" onclick="closeModal('listDetail')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+            <h2 id="listDetailTitle">List</h2>
+            <p class="modal-sub" id="listDetailMeta"></p>
+            <p class="list-detail-description" id="listDetailDescription"></p>
+            <div id="listDetailFilms"></div>
+        </div>
+    </div>
+
+    <!-- Edit Profile -->
+    <div class="modal-overlay hidden" id="editProfileModal">
+        <div class="modal-backdrop" onclick="closeModal('editProfile')"></div>
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeModal('editProfile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+            <div class="modal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <h2>Edit Profile</h2>
+            <p class="modal-sub">Update your profile information</p>
+            <form id="editProfileForm" onsubmit="handleEditProfile(event)">
+                <div class="form-group"><label>Display Name</label><input type="text" id="editDisplayName" placeholder="Your name" required></div>
+                <div class="form-group"><label>Bio</label><textarea id="editBio" rows="3" placeholder="Tell us about yourself..."></textarea></div>
+                <div class="form-group"><label>Profile Picture</label><input type="url" id="editProfilePic" placeholder="Paste image URL or upload below"></div>
+                <div class="form-group"><input type="file" id="editProfilePicFile" accept="image/*" onchange="handleProfilePicUpload(event)"></div>
+                <div class="form-group"><label>Favorite Movie</label><input type="text" id="editFavoriteMovie" placeholder="Your all-time favorite"></div>
+                <div class="form-error hidden" id="editProfileError"></div>
+                <button type="submit" class="btn btn-primary btn-full btn-large">Save Changes</button>
             </form>
         </div>
     </div>

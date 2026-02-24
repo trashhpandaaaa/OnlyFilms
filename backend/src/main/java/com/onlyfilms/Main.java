@@ -5,15 +5,16 @@ import com.onlyfilms.filter.AuthFilter;
 import com.onlyfilms.filter.CorsFilter;
 import com.onlyfilms.servlet.ActivityServlet;
 import com.onlyfilms.servlet.AuthServlet;
+import com.onlyfilms.servlet.CommentServlet;
+import com.onlyfilms.servlet.FavoriteFilmServlet;
+import com.onlyfilms.servlet.FollowServlet;
 import com.onlyfilms.servlet.GenreServlet;
 import com.onlyfilms.servlet.HealthServlet;
+import com.onlyfilms.servlet.LikeServlet;
 import com.onlyfilms.servlet.ListServlet;
 import com.onlyfilms.servlet.MovieServlet;
-import com.onlyfilms.servlet.ReviewServlet;
 import com.onlyfilms.servlet.UserServlet;
-import com.onlyfilms.servlet.WatchlistServlet;
 import com.onlyfilms.servlet.TmdbServlet;
-import com.onlyfilms.servlet.PersonServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -89,31 +90,34 @@ public class Main {
         // Auth endpoints (register, login)
         context.addServlet(new ServletHolder(new AuthServlet()), "/api/auth/*");
 
-        // Movie endpoints
+        // Movie endpoints (TMDB proxy)
         context.addServlet(new ServletHolder(new MovieServlet()), "/api/movies/*");
 
-        // Genre endpoints
+        // Genre endpoints (TMDB proxy)
         context.addServlet(new ServletHolder(new GenreServlet()), "/api/genres/*");
 
-        // Review endpoints
-        context.addServlet(new ServletHolder(new ReviewServlet()), "/api/reviews/*");
+        // Activity endpoints (reviews + watch logs)
+        context.addServlet(new ServletHolder(new ActivityServlet()), "/api/activity/*");
 
-        // Watchlist & Watch History endpoints
-        context.addServlet(new ServletHolder(new WatchlistServlet()), "/api/watchlist/*");
+        // Comment endpoints
+        context.addServlet(new ServletHolder(new CommentServlet()), "/api/comments/*");
 
-        // Custom Lists endpoints
+        // Like endpoints
+        context.addServlet(new ServletHolder(new LikeServlet()), "/api/likes/*");
+
+        // Favorite film endpoints
+        context.addServlet(new ServletHolder(new FavoriteFilmServlet()), "/api/favorites/*");
+
+        // List endpoints
         context.addServlet(new ServletHolder(new ListServlet()), "/api/lists/*");
 
-        // User Profile & Social endpoints
+        // User Profile endpoints
         context.addServlet(new ServletHolder(new UserServlet()), "/api/users/*");
 
-        // Activity Feed endpoints
-        context.addServlet(new ServletHolder(new ActivityServlet()), "/api/activity/*");
-        
-        // TMDB Sync endpoints (admin)
+        // Follow endpoints
+        context.addServlet(new ServletHolder(new FollowServlet()), "/api/follows/*");
+
+        // TMDB proxy endpoints (admin)
         context.addServlet(new ServletHolder(new TmdbServlet()), "/api/tmdb/*");
-        
-        // Person (Actor/Director) endpoints
-        context.addServlet(new ServletHolder(new PersonServlet()), "/api/person/*");
     }
 }

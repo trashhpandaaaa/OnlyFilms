@@ -11,10 +11,11 @@ public class JwtUtil {
     private static final SecretKey KEY = Keys.hmacShaKeyFor(SECRET.getBytes());
     private static final long EXPIRATION_TIME = 86400000; // 24 hours
     
-    public static String generateToken(int userId, String username) {
+    public static String generateToken(int userId, int profileId, String displayName) {
         return Jwts.builder()
             .subject(String.valueOf(userId))
-            .claim("username", username)
+            .claim("profileId", profileId)
+            .claim("displayName", displayName)
             .issuedAt(new Date())
             .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
             .signWith(KEY)
@@ -41,10 +42,18 @@ public class JwtUtil {
         return null;
     }
     
-    public static String getUsernameFromToken(String token) {
+    public static Integer getProfileIdFromToken(String token) {
         Claims claims = validateToken(token);
         if (claims != null) {
-            return claims.get("username", String.class);
+            return claims.get("profileId", Integer.class);
+        }
+        return null;
+    }
+    
+    public static String getDisplayNameFromToken(String token) {
+        Claims claims = validateToken(token);
+        if (claims != null) {
+            return claims.get("displayName", String.class);
         }
         return null;
     }

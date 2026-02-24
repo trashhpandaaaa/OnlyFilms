@@ -3,82 +3,119 @@
 
 USE onlyfilms;
 
+-- Insert date dimension entries
+INSERT INTO date_dim (full_date, day, month, quarter, year) VALUES
+('2025-01-15', 15, 1, 1, 2025),
+('2025-02-20', 20, 2, 1, 2025),
+('2025-03-10', 10, 3, 1, 2025),
+('2025-06-01', 1, 6, 2, 2025),
+('2025-12-25', 25, 12, 4, 2025),
+('2026-01-01', 1, 1, 1, 2026),
+('2026-02-14', 14, 2, 1, 2026),
+('2026-02-24', 24, 2, 1, 2026);
+
 -- Insert genres
-INSERT INTO genres (name, slug) VALUES
-('Action', 'action'),
-('Adventure', 'adventure'),
-('Animation', 'animation'),
-('Comedy', 'comedy'),
-('Crime', 'crime'),
-('Documentary', 'documentary'),
-('Drama', 'drama'),
-('Family', 'family'),
-('Fantasy', 'fantasy'),
-('History', 'history'),
-('Horror', 'horror'),
-('Music', 'music'),
-('Mystery', 'mystery'),
-('Romance', 'romance'),
-('Science Fiction', 'science-fiction'),
-('Thriller', 'thriller'),
-('War', 'war'),
-('Western', 'western');
+INSERT INTO genre (genre) VALUES
+('Action'), ('Adventure'), ('Animation'), ('Comedy'), ('Crime'),
+('Documentary'), ('Drama'), ('Family'), ('Fantasy'), ('History'),
+('Horror'), ('Music'), ('Mystery'), ('Romance'), ('Science Fiction'),
+('Thriller'), ('War'), ('Western');
 
--- Insert sample movies
-INSERT INTO movies (title, original_title, overview, poster_url, backdrop_url, release_date, runtime, language, average_rating, rating_count) VALUES
-('The Shawshank Redemption', 'The Shawshank Redemption', 'Imprisoned in the 1940s for the double murder of his wife and her lover, upstanding banker Andy Dufresne begins a new life at the Shawshank prison, where he puts his accounting skills to work for an pointedly corrupt warden.', 'https://image.tmdb.org/t/p/w500/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg', 'https://image.tmdb.org/t/p/original/kXfqcdQKsToO0OUXHcrrNCHDBzO.jpg', '1994-09-23', 142, 'en', 4.70, 24500),
-('The Godfather', 'The Godfather', 'Spanning the years 1945 to 1955, a chronicle of the fictional Italian-American Corleone crime family. When organized crime family patriarch, Vito Corleone barely survives an attempt on his life, his youngest son, Michael steps in to take care of the would-be killers.', 'https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg', 'https://image.tmdb.org/t/p/original/tmU7GeKVybMWFButWEGl2M4GeiP.jpg', '1972-03-14', 175, 'en', 4.65, 18200),
-('The Dark Knight', 'The Dark Knight', 'Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets.', 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg', 'https://image.tmdb.org/t/p/original/nMKdUUepR0i5zn0y1T4CsSB5chy.jpg', '2008-07-16', 152, 'en', 4.55, 29800),
-('Pulp Fiction', 'Pulp Fiction', 'A burger-loving hit man, his philosophical partner, a drug-addled gangster''s moll and a washed-up boxer converge in this sprawling, comedic crime caper.', 'https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg', 'https://image.tmdb.org/t/p/original/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg', '1994-09-10', 154, 'en', 4.50, 25600),
-('Inception', 'Inception', 'Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets is offered a chance to regain his old life as payment for a task considered to be impossible: inception.', 'https://image.tmdb.org/t/p/w500/edv5CZvWj09upOsy2Y6IwDhK8bt.jpg', 'https://image.tmdb.org/t/p/original/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg', '2010-07-15', 148, 'en', 4.45, 33400),
-('Forrest Gump', 'Forrest Gump', 'A man with a low IQ has accomplished great things in his life and been present during significant historic events—in each case, far exceeding what anyone imagined he could do.', 'https://image.tmdb.org/t/p/w500/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg', 'https://image.tmdb.org/t/p/original/3h1JZGDhZ8nzxdgvkxha0qBqi05.jpg', '1994-06-23', 142, 'en', 4.50, 24100),
-('The Matrix', 'The Matrix', 'Set in the 22nd century, The Matrix tells the story of a computer hacker who joins a group of underground insurgents fighting the vast and powerful computers who now rule the earth.', 'https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg', 'https://image.tmdb.org/t/p/original/fNG7i7RqMErkcqhohV2a6cV1Ehy.jpg', '1999-03-30', 136, 'en', 4.40, 23700),
-('Interstellar', 'Interstellar', 'The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel and conquer the vast distances involved in an interstellar voyage.', 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg', 'https://image.tmdb.org/t/p/original/xJHokMbljvjADYdit5fK5VQsXEG.jpg', '2014-11-05', 169, 'en', 4.45, 31200),
-('Spirited Away', 'Sen to Chihiro no Kamikakushi', 'A young girl, Chihiro, becomes trapped in a strange new world of spirits. When her parents undergo a mysterious transformation, she must call upon the courage she never knew she had to free her family.', 'https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg', 'https://image.tmdb.org/t/p/original/6oaL4DP75yABrd5EbC4H2zq5ghc.jpg', '2001-07-20', 125, 'ja', 4.55, 14300),
-('Parasite', 'Gisaengchung', 'All unemployed, Ki-taek''s family takes peculiar interest in the wealthy and glamorous Parks for their livelihood until they get entangled in an unexpected incident.', 'https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg', 'https://image.tmdb.org/t/p/original/TU9NIjwzjoKPwQHoHshkFcQUCG.jpg', '2019-05-30', 132, 'ko', 4.50, 15800),
-('Your Name', 'Kimi no Na wa', 'High schoolers Mitsuha and Taki are complete strangers living separate lives. But one night, they suddenly switch places. Mitsuha wakes up in Taki''s body, and he in hers.', 'https://image.tmdb.org/t/p/w500/q719jXXEzOoYaps6babgKnONONX.jpg', 'https://image.tmdb.org/t/p/original/dIWwZW7dJJtqC6CgWzYkNVKIUm8.jpg', '2016-08-26', 106, 'ja', 4.50, 10200),
-('Fight Club', 'Fight Club', 'A ticking-Loss insomnia-Loss insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy. Their concept catches on, with underground fight clubs forming in every town.', 'https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg', 'https://image.tmdb.org/t/p/original/hZkgoQYus5vegHoetLkCJzb17zJ.jpg', '1999-10-15', 139, 'en', 4.45, 26500),
-('Goodfellas', 'Goodfellas', 'The true story of Henry Hill, a half-Irish, half-Sicilian Brooklyn kid who is adopted by neighbourhood gangsters at an early age and climbs the ranks of a Mafia family under the guidance of Jimmy Conway.', 'https://image.tmdb.org/t/p/w500/aKuFiU82s5ISJpGZp7YkIr3kCUd.jpg', 'https://image.tmdb.org/t/p/original/sw7mordbZxgITU877yTpZCud90M.jpg', '1990-09-12', 145, 'en', 4.40, 11700),
-('The Lord of the Rings: The Fellowship of the Ring', 'The Lord of the Rings: The Fellowship of the Ring', 'Young hobbit Frodo Baggins, after inheriting a mysterious ring from his uncle Bilbo, must leave his home in order to keep it from falling into the hands of its evil creator.', 'https://image.tmdb.org/t/p/w500/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg', 'https://image.tmdb.org/t/p/original/x2RS3uTcsJJ9IfjNPcgDmukoEcQ.jpg', '2001-12-18', 178, 'en', 4.45, 22100),
-('Whiplash', 'Whiplash', 'Under the direction of a ruthless instructor, a talented young drummer begins to pursue perfection at any cost, even his humanity.', 'https://image.tmdb.org/t/p/w500/7fn624j5lj3xTme2SgiLCeuedmO.jpg', 'https://image.tmdb.org/t/p/original/fRGxZuo7jJUWQsVg9PREb98Aclp.jpg', '2014-10-10', 106, 'en', 4.40, 12400);
+-- Insert countries
+INSERT INTO country (country_name) VALUES
+('United States'), ('United Kingdom'), ('France'), ('Japan'),
+('South Korea'), ('Germany'), ('Italy'), ('India'), ('Canada'), ('Australia');
 
--- Link movies to genres (movie_genres)
--- The Shawshank Redemption - Drama, Crime
-INSERT INTO movie_genres (movie_id, genre_id) VALUES (1, 7), (1, 5);
--- The Godfather - Drama, Crime
-INSERT INTO movie_genres (movie_id, genre_id) VALUES (2, 7), (2, 5);
--- The Dark Knight - Action, Crime, Drama, Thriller
-INSERT INTO movie_genres (movie_id, genre_id) VALUES (3, 1), (3, 5), (3, 7), (3, 16);
--- Pulp Fiction - Crime, Thriller
-INSERT INTO movie_genres (movie_id, genre_id) VALUES (4, 5), (4, 16);
--- Inception - Action, Science Fiction, Adventure
-INSERT INTO movie_genres (movie_id, genre_id) VALUES (5, 1), (5, 15), (5, 2);
--- Forrest Gump - Drama, Comedy, Romance
-INSERT INTO movie_genres (movie_id, genre_id) VALUES (6, 7), (6, 4), (6, 14);
--- The Matrix - Action, Science Fiction
-INSERT INTO movie_genres (movie_id, genre_id) VALUES (7, 1), (7, 15);
--- Interstellar - Adventure, Drama, Science Fiction
-INSERT INTO movie_genres (movie_id, genre_id) VALUES (8, 2), (8, 7), (8, 15);
--- Spirited Away - Animation, Family, Fantasy
-INSERT INTO movie_genres (movie_id, genre_id) VALUES (9, 3), (9, 8), (9, 9);
--- Parasite - Drama, Thriller, Comedy
-INSERT INTO movie_genres (movie_id, genre_id) VALUES (10, 7), (10, 16), (10, 4);
--- Your Name - Animation, Romance, Drama
-INSERT INTO movie_genres (movie_id, genre_id) VALUES (11, 3), (11, 14), (11, 7);
--- Fight Club - Drama, Thriller
-INSERT INTO movie_genres (movie_id, genre_id) VALUES (12, 7), (12, 16);
--- Goodfellas - Drama, Crime
-INSERT INTO movie_genres (movie_id, genre_id) VALUES (13, 7), (13, 5);
--- LOTR Fellowship - Adventure, Fantasy, Action
-INSERT INTO movie_genres (movie_id, genre_id) VALUES (14, 2), (14, 9), (14, 1);
--- Whiplash - Drama, Music
-INSERT INTO movie_genres (movie_id, genre_id) VALUES (15, 7), (15, 12);
+-- Insert studios
+INSERT INTO studio (studio_name) VALUES
+('Warner Bros.'), ('Universal Pictures'), ('Paramount Pictures'),
+('Walt Disney Pictures'), ('Columbia Pictures'), ('20th Century Studios'),
+('Lionsgate'), ('A24'), ('Studio Ghibli'), ('New Line Cinema');
 
--- Create a test user (password is 'password123')
-INSERT INTO users (username, email, password_hash, display_name, bio) VALUES
-('testuser', 'test@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZRGdjGj/n3.r8s6P.3bL9.r7xK6nW', 'Test User', 'Just a movie lover!');
+-- Insert persons (actors/directors)
+INSERT INTO person (name, bio) VALUES
+('Christopher Nolan', 'British-American filmmaker known for cerebral, often nonlinear storytelling.'),
+('Steven Spielberg', 'American filmmaker, one of the most commercially successful directors in history.'),
+('Quentin Tarantino', 'American filmmaker known for nonlinear storylines and stylized violence.'),
+('Leonardo DiCaprio', 'American actor and producer known for his work in biopics and period films.'),
+('Morgan Freeman', 'American actor and narrator known for his distinctive deep voice.'),
+('Tim Robbins', 'American actor and filmmaker.'),
+('Marlon Brando', 'American actor considered one of the greatest of all time.'),
+('Al Pacino', 'American actor and filmmaker known for his intense performances.'),
+('Hayao Miyazaki', 'Japanese animator, filmmaker, and co-founder of Studio Ghibli.'),
+('Bong Joon-ho', 'South Korean filmmaker known for genre-mixing social thrillers.');
+
+-- Insert sample films
+INSERT INTO film (tmdb_id, film_title, release_year, synopsis, runtime_mins, poster_url, film_description) VALUES
+(278, 'The Shawshank Redemption', 1994, 'Imprisoned in the 1940s for the double murder of his wife and her lover, upstanding banker Andy Dufresne begins a new life at the Shawshank prison.', 142, 'https://image.tmdb.org/t/p/w500/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg', 'A tale of hope and perseverance in prison.'),
+(238, 'The Godfather', 1972, 'Spanning the years 1945 to 1955, a chronicle of the fictional Italian-American Corleone crime family.', 175, 'https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg', 'The aging patriarch transfers control to his reluctant son.'),
+(155, 'The Dark Knight', 2008, 'Batman raises the stakes in his war on crime with the help of Lt. Jim Gordon and District Attorney Harvey Dent.', 152, 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg', 'A gritty superhero crime thriller.'),
+(680, 'Pulp Fiction', 1994, 'A burger-loving hit man, his philosophical partner, a drug-addled gangsters moll and a washed-up boxer converge.', 154, 'https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg', 'Interconnected crime stories in Los Angeles.'),
+(27205, 'Inception', 2010, 'Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets.', 148, 'https://image.tmdb.org/t/p/w500/edv5CZvWj09upOsy2Y6IwDhK8bt.jpg', 'A mind-bending heist within dreams.'),
+(129, 'Spirited Away', 2001, 'A young girl becomes trapped in a strange new world of spirits when her parents undergo a mysterious transformation.', 125, 'https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg', 'Studio Ghibli masterpiece about courage and identity.'),
+(496243, 'Parasite', 2019, 'All unemployed, Ki-taeks family takes peculiar interest in the wealthy and glamorous Parks for their livelihood.', 132, 'https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg', 'A dark comedy thriller about class divide.'),
+(157336, 'Interstellar', 2014, 'Explorers make use of a newly discovered wormhole to surpass the limitations on human space travel.', 169, 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg', 'An epic science fiction journey through space and time.');
+
+-- Link films to genres
+INSERT INTO film_genre (film_id, genre_id) VALUES
+(1, 7), (1, 5),       -- Shawshank: Drama, Crime
+(2, 7), (2, 5),       -- Godfather: Drama, Crime
+(3, 1), (3, 5), (3, 7), (3, 16),  -- Dark Knight: Action, Crime, Drama, Thriller
+(4, 5), (4, 16),      -- Pulp Fiction: Crime, Thriller
+(5, 1), (5, 15), (5, 2),  -- Inception: Action, SciFi, Adventure
+(6, 3), (6, 8), (6, 9),   -- Spirited Away: Animation, Family, Fantasy
+(7, 7), (7, 16), (7, 4),  -- Parasite: Drama, Thriller, Comedy
+(8, 2), (8, 7), (8, 15);  -- Interstellar: Adventure, Drama, SciFi
+
+-- Link films to countries
+INSERT INTO film_country (film_id, country_id) VALUES
+(1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (5, 2),  -- US/UK films
+(6, 4),   -- Spirited Away: Japan
+(7, 5),   -- Parasite: South Korea
+(8, 1), (8, 2);  -- Interstellar: US, UK
+
+-- Link films to studios
+INSERT INTO film_studio (film_id, studio_id) VALUES
+(1, 2),   -- Shawshank: Universal (approx)
+(2, 3),   -- Godfather: Paramount
+(3, 1),   -- Dark Knight: Warner Bros
+(4, 7),   -- Pulp Fiction: Lionsgate (approx)
+(5, 1),   -- Inception: Warner Bros
+(6, 9),   -- Spirited Away: Studio Ghibli
+(7, 5),   -- Parasite: N/A using Columbia
+(8, 3);   -- Interstellar: Paramount
+
+-- Link films to cast
+INSERT INTO film_cast (film_id, person_id) VALUES
+(1, 6), (1, 5),   -- Shawshank: Tim Robbins, Morgan Freeman
+(2, 7), (2, 8),   -- Godfather: Brando, Pacino
+(5, 4),            -- Inception: DiCaprio
+(6, 9),            -- Spirited Away: (Miyazaki as representative)
+(7, 10);           -- Parasite: (Bong Joon-ho as representative)
+
+-- Link films to crew (directors)
+INSERT INTO film_crew (film_id, person_id) VALUES
+(3, 1),   -- Dark Knight: Nolan
+(5, 1),   -- Inception: Nolan
+(8, 1),   -- Interstellar: Nolan
+(4, 3),   -- Pulp Fiction: Tarantino
+(6, 9),   -- Spirited Away: Miyazaki
+(7, 10);  -- Parasite: Bong Joon-ho
+
+-- Create test user (password is 'password123' - BCrypt hash)
+INSERT INTO users (email, password) VALUES
+('test@example.com', '$2a$12$LJ3m4ysMVxaJCwJhMCf.N.bGv/MBHFIkHgHIPzvwb37dsxBmGBLEa');
+
+-- Create date entry for today
+INSERT INTO date_dim (full_date, day, month, quarter, year) VALUES
+('2026-02-24', 24, 2, 1, 2026)
+ON DUPLICATE KEY UPDATE date_id = date_id;
+
+-- Create test profile
+INSERT INTO profiles (user_id, display_name, bio, join_date_id) VALUES
+(1, 'TestUser', 'Just a movie lover!', (SELECT date_id FROM date_dim WHERE full_date = '2026-02-24'));
 
 SELECT 'Seed data inserted successfully!' AS status;
-SELECT CONCAT(COUNT(*), ' genres inserted') AS genres FROM genres;
-SELECT CONCAT(COUNT(*), ' movies inserted') AS movies FROM movies;
-SELECT CONCAT(COUNT(*), ' movie-genre links inserted') AS links FROM movie_genres;
+SELECT CONCAT(COUNT(*), ' genres inserted') AS genres FROM genre;
+SELECT CONCAT(COUNT(*), ' films inserted') AS films FROM film;
+SELECT CONCAT(COUNT(*), ' persons inserted') AS persons FROM person;

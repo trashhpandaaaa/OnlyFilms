@@ -2,258 +2,182 @@ package com.onlyfilms.dao;
 
 import com.onlyfilms.config.DatabaseConfig;
 import com.onlyfilms.model.Activity;
-import com.onlyfilms.model.Activity.ActivityType;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Data Access Object for Activity Feed operations
- */
 public class ActivityDAO {
 
-    /**
-     * Get activity feed for a user (from people they follow)
-     */
-    public List<Activity> getFeed(int userId, int page, int limit) {
-        // Get combined activities from followed users
-        String sql = """
-            (
-                -- Reviews from followed users
-                SELECT 'REVIEW' as type, r.created_at as timestamp,
-                       r.user_id, u.username, u.avatar_url as user_avatar,
-                       r.movie_id, m.title as movie_title, m.poster_url as movie_poster,
-                       r.id as review_id, r.rating, 
-                       SUBSTRING(r.content, 1, 200) as review_content,
-                       NULL as list_id, NULL as list_name,
-                       NULL as target_user_id, NULL as target_username
-                FROM reviews r
-                JOIN users u ON r.user_id = u.id
-                JOIN movies m ON r.movie_id = m.id
-                WHERE r.user_id IN (SELECT following_id FROM follows WHERE follower_id = ?)
-            )
-            UNION ALL
-            (
-                -- Watch history from followed users
-                SELECT 'WATCH' as type, wh.created_at as timestamp,
-                       wh.user_id, u.username, u.avatar_url as user_avatar,
-                       wh.movie_id, m.title as movie_title, m.poster_url as movie_poster,
-                       NULL as review_id, NULL as rating, NULL as review_content,
-                       NULL as list_id, NULL as list_name,
-                       NULL as target_user_id, NULL as target_username
-                FROM watch_history wh
-                JOIN users u ON wh.user_id = u.id
-                JOIN movies m ON wh.movie_id = m.id
-                WHERE wh.user_id IN (SELECT following_id FROM follows WHERE follower_id = ?)
-            )
-            UNION ALL
-            (
-                -- Lists created by followed users
-                SELECT 'LIST_CREATE' as type, cl.created_at as timestamp,
-                       cl.user_id, u.username, u.avatar_url as user_avatar,
-                       NULL as movie_id, NULL as movie_title, NULL as movie_poster,
-                       NULL as review_id, NULL as rating, NULL as review_content,
-                       cl.id as list_id, cl.name as list_name,
-                       NULL as target_user_id, NULL as target_username
-                FROM custom_lists cl
-                JOIN users u ON cl.user_id = u.id
-                WHERE cl.is_public = TRUE
-                  AND cl.user_id IN (SELECT following_id FROM follows WHERE follower_id = ?)
-            )
-            ORDER BY timestamp DESC
-            LIMIT ? OFFSET ?
-            """;
-        
-        List<Activity> activities = new ArrayList<>();
-        
+    private static final String SELECT_WITH_JOINS = """
+        SELECT a.activity_id, a.profile_id, a.film_id, a.review_date_id, a.watched_date_id,
+               a.rating, a.watched_status, a.review_description,
+               p.display_name, p.profile_pic,
+               f.film_title, f.poster_url, f.tmdb_id,
+               rd.full_date AS review_date, wd.full_date AS watched_date,
+               (SELECT COUNT(*) FROM `like` l WHERE l.activity_id = a.activity_id) AS like_count,
+               (SELECT COUNT(*) FROM comment c WHERE c.activity_id = a.activity_id) AS comment_count
+        FROM activity a
+        JOIN profiles p ON a.profile_id = p.profile_id
+        JOIN film f ON a.film_id = f.film_id
+        LEFT JOIN date_dim rd ON a.review_date_id = rd.date_id
+        LEFT JOIN date_dim wd ON a.watched_date_id = wd.date_id
+        """;
+
+    public Activity findById(int activityId) throws SQLException {
+        String sql = SELECT_WITH_JOINS + " WHERE a.activity_id = ?";
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, userId);
-            stmt.setInt(2, userId);
-            stmt.setInt(3, userId);
-            stmt.setInt(4, limit);
-            stmt.setInt(5, (page - 1) * limit);
-            
+            stmt.setInt(1, activityId);
             ResultSet rs = stmt.executeQuery();
-            
-            while (rs.next()) {
-                activities.add(mapResultSetToActivity(rs));
+            if (rs.next()) {
+                return mapRow(rs);
             }
-        } catch (SQLException e) {
-            System.err.println("Error getting feed: " + e.getMessage());
         }
-        return activities;
+        return null;
     }
 
-    /**
-     * Get activity for a specific user (their profile activity)
-     */
-    public List<Activity> getUserActivity(int userId, int page, int limit) {
+    public Activity create(Activity activity) throws SQLException {
         String sql = """
-            (
-                -- User's reviews
-                SELECT 'REVIEW' as type, r.created_at as timestamp,
-                       r.user_id, u.username, u.avatar_url as user_avatar,
-                       r.movie_id, m.title as movie_title, m.poster_url as movie_poster,
-                       r.id as review_id, r.rating,
-                       SUBSTRING(r.content, 1, 200) as review_content,
-                       NULL as list_id, NULL as list_name,
-                       NULL as target_user_id, NULL as target_username
-                FROM reviews r
-                JOIN users u ON r.user_id = u.id
-                JOIN movies m ON r.movie_id = m.id
-                WHERE r.user_id = ?
-            )
-            UNION ALL
-            (
-                -- User's watch history
-                SELECT 'WATCH' as type, wh.created_at as timestamp,
-                       wh.user_id, u.username, u.avatar_url as user_avatar,
-                       wh.movie_id, m.title as movie_title, m.poster_url as movie_poster,
-                       NULL as review_id, NULL as rating, NULL as review_content,
-                       NULL as list_id, NULL as list_name,
-                       NULL as target_user_id, NULL as target_username
-                FROM watch_history wh
-                JOIN users u ON wh.user_id = u.id
-                JOIN movies m ON wh.movie_id = m.id
-                WHERE wh.user_id = ?
-            )
-            UNION ALL
-            (
-                -- User's public lists
-                SELECT 'LIST_CREATE' as type, cl.created_at as timestamp,
-                       cl.user_id, u.username, u.avatar_url as user_avatar,
-                       NULL as movie_id, NULL as movie_title, NULL as movie_poster,
-                       NULL as review_id, NULL as rating, NULL as review_content,
-                       cl.id as list_id, cl.name as list_name,
-                       NULL as target_user_id, NULL as target_username
-                FROM custom_lists cl
-                JOIN users u ON cl.user_id = u.id
-                WHERE cl.is_public = TRUE AND cl.user_id = ?
-            )
-            ORDER BY timestamp DESC
-            LIMIT ? OFFSET ?
+            INSERT INTO activity (profile_id, film_id, review_date_id, watched_date_id, rating, watched_status, review_description)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """;
-        
-        List<Activity> activities = new ArrayList<>();
-        
         try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, userId);
-            stmt.setInt(2, userId);
-            stmt.setInt(3, userId);
-            stmt.setInt(4, limit);
-            stmt.setInt(5, (page - 1) * limit);
-            
-            ResultSet rs = stmt.executeQuery();
-            
-            while (rs.next()) {
-                activities.add(mapResultSetToActivity(rs));
-            }
-        } catch (SQLException e) {
-            System.err.println("Error getting user activity: " + e.getMessage());
-        }
-        return activities;
-    }
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, activity.getProfileId());
+            stmt.setInt(2, activity.getFilmId());
+            stmt.setObject(3, activity.getReviewDateId());
+            stmt.setObject(4, activity.getWatchedDateId());
+            stmt.setObject(5, activity.getRating());
+            stmt.setString(6, activity.getWatchedStatus());
+            stmt.setString(7, activity.getReviewDescription());
+            stmt.executeUpdate();
 
-    /**
-     * Get global/recent activity (for discovery)
-     */
-    public List<Activity> getRecentActivity(int page, int limit) {
-        String sql = """
-            (
-                -- Recent reviews
-                SELECT 'REVIEW' as type, r.created_at as timestamp,
-                       r.user_id, u.username, u.avatar_url as user_avatar,
-                       r.movie_id, m.title as movie_title, m.poster_url as movie_poster,
-                       r.id as review_id, r.rating,
-                       SUBSTRING(r.content, 1, 200) as review_content,
-                       NULL as list_id, NULL as list_name,
-                       NULL as target_user_id, NULL as target_username
-                FROM reviews r
-                JOIN users u ON r.user_id = u.id
-                JOIN movies m ON r.movie_id = m.id
-            )
-            UNION ALL
-            (
-                -- Recent public lists
-                SELECT 'LIST_CREATE' as type, cl.created_at as timestamp,
-                       cl.user_id, u.username, u.avatar_url as user_avatar,
-                       NULL as movie_id, NULL as movie_title, NULL as movie_poster,
-                       NULL as review_id, NULL as rating, NULL as review_content,
-                       cl.id as list_id, cl.name as list_name,
-                       NULL as target_user_id, NULL as target_username
-                FROM custom_lists cl
-                JOIN users u ON cl.user_id = u.id
-                WHERE cl.is_public = TRUE
-            )
-            ORDER BY timestamp DESC
-            LIMIT ? OFFSET ?
-            """;
-        
-        List<Activity> activities = new ArrayList<>();
-        
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, limit);
-            stmt.setInt(2, (page - 1) * limit);
-            
-            ResultSet rs = stmt.executeQuery();
-            
-            while (rs.next()) {
-                activities.add(mapResultSetToActivity(rs));
+            ResultSet keys = stmt.getGeneratedKeys();
+            if (keys.next()) {
+                activity.setActivityId(keys.getInt(1));
             }
-        } catch (SQLException e) {
-            System.err.println("Error getting recent activity: " + e.getMessage());
         }
-        return activities;
-    }
-
-    private Activity mapResultSetToActivity(ResultSet rs) throws SQLException {
-        Activity activity = new Activity();
-        
-        String type = rs.getString("type");
-        activity.setType(ActivityType.valueOf(type));
-        activity.setTimestamp(rs.getTimestamp("timestamp"));
-        
-        activity.setUserId(rs.getInt("user_id"));
-        activity.setUsername(rs.getString("username"));
-        activity.setUserAvatarUrl(rs.getString("user_avatar"));
-        
-        // Movie info
-        int movieId = rs.getInt("movie_id");
-        if (!rs.wasNull()) {
-            activity.setMovieId(movieId);
-            activity.setMovieTitle(rs.getString("movie_title"));
-            activity.setMoviePosterUrl(rs.getString("movie_poster"));
-        }
-        
-        // Review info
-        int reviewId = rs.getInt("review_id");
-        if (!rs.wasNull()) {
-            activity.setReviewId(reviewId);
-            activity.setRating(rs.getInt("rating"));
-            activity.setReviewContent(rs.getString("review_content"));
-        }
-        
-        // List info
-        int listId = rs.getInt("list_id");
-        if (!rs.wasNull()) {
-            activity.setListId(listId);
-            activity.setListName(rs.getString("list_name"));
-        }
-        
-        // Target user info
-        int targetUserId = rs.getInt("target_user_id");
-        if (!rs.wasNull()) {
-            activity.setTargetUserId(targetUserId);
-            activity.setTargetUsername(rs.getString("target_username"));
-        }
-        
         return activity;
+    }
+
+    public void update(Activity activity) throws SQLException {
+        String sql = """
+            UPDATE activity SET rating = ?, watched_status = ?, review_description = ?,
+                   review_date_id = ?, watched_date_id = ?
+            WHERE activity_id = ? AND profile_id = ?
+            """;
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setObject(1, activity.getRating());
+            stmt.setString(2, activity.getWatchedStatus());
+            stmt.setString(3, activity.getReviewDescription());
+            stmt.setObject(4, activity.getReviewDateId());
+            stmt.setObject(5, activity.getWatchedDateId());
+            stmt.setInt(6, activity.getActivityId());
+            stmt.setInt(7, activity.getProfileId());
+            stmt.executeUpdate();
+        }
+    }
+
+    public void delete(int activityId, int profileId) throws SQLException {
+        String sql = "DELETE FROM activity WHERE activity_id = ? AND profile_id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, activityId);
+            stmt.setInt(2, profileId);
+            stmt.executeUpdate();
+        }
+    }
+
+    /** Get activities for a specific film, ordered by most recent review date */
+    public List<Activity> findByFilmId(int filmId, int limit, int offset) throws SQLException {
+        String sql = SELECT_WITH_JOINS + " WHERE a.film_id = ? ORDER BY a.activity_id DESC LIMIT ? OFFSET ?";
+        return executeList(sql, filmId, limit, offset);
+    }
+
+    /** Get activities for a specific profile */
+    public List<Activity> findByProfileId(int profileId, int limit, int offset) throws SQLException {
+        String sql = SELECT_WITH_JOINS + " WHERE a.profile_id = ? ORDER BY a.activity_id DESC LIMIT ? OFFSET ?";
+        return executeList(sql, profileId, limit, offset);
+    }
+
+    /** Get recent activity feed (all users) */
+    public List<Activity> getRecentActivity(int limit, int offset) throws SQLException {
+        String sql = SELECT_WITH_JOINS + " ORDER BY a.activity_id DESC LIMIT ? OFFSET ?";
+        List<Activity> activities = new ArrayList<>();
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, limit);
+            stmt.setInt(2, offset);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                activities.add(mapRow(rs));
+            }
+        }
+        return activities;
+    }
+
+    /** Get activity feed from followed users */
+    public List<Activity> getFeedForProfile(int profileId, int limit, int offset) throws SQLException {
+        String sql = SELECT_WITH_JOINS +
+            " WHERE a.profile_id IN (SELECT following_id FROM follows_list WHERE follower_id = ?)" +
+            " ORDER BY a.activity_id DESC LIMIT ? OFFSET ?";
+        return executeList(sql, profileId, limit, offset);
+    }
+
+    /** Check if a profile already has an activity for a film */
+    public Activity findByProfileAndFilm(int profileId, int filmId) throws SQLException {
+        String sql = SELECT_WITH_JOINS + " WHERE a.profile_id = ? AND a.film_id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, profileId);
+            stmt.setInt(2, filmId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return mapRow(rs);
+            }
+        }
+        return null;
+    }
+
+    private List<Activity> executeList(String sql, int paramId, int limit, int offset) throws SQLException {
+        List<Activity> activities = new ArrayList<>();
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, paramId);
+            stmt.setInt(2, limit);
+            stmt.setInt(3, offset);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                activities.add(mapRow(rs));
+            }
+        }
+        return activities;
+    }
+
+    private Activity mapRow(ResultSet rs) throws SQLException {
+        Activity a = new Activity();
+        a.setActivityId(rs.getInt("activity_id"));
+        a.setProfileId(rs.getInt("profile_id"));
+        a.setFilmId(rs.getInt("film_id"));
+        a.setReviewDateId((Integer) rs.getObject("review_date_id"));
+        a.setWatchedDateId((Integer) rs.getObject("watched_date_id"));
+        double rating = rs.getDouble("rating");
+        a.setRating(rs.wasNull() ? null : rating);
+        a.setWatchedStatus(rs.getString("watched_status"));
+        a.setReviewDescription(rs.getString("review_description"));
+        a.setDisplayName(rs.getString("display_name"));
+        a.setProfilePic(rs.getString("profile_pic"));
+        a.setFilmTitle(rs.getString("film_title"));
+        a.setPosterUrl(rs.getString("poster_url"));
+        a.setTmdbId((Integer) rs.getObject("tmdb_id"));
+        Date rd = rs.getDate("review_date");
+        if (rd != null) a.setReviewDate(rd.toString());
+        Date wd = rs.getDate("watched_date");
+        if (wd != null) a.setWatchedDate(wd.toString());
+        a.setLikeCount(rs.getInt("like_count"));
+        a.setCommentCount(rs.getInt("comment_count"));
+        return a;
     }
 }
